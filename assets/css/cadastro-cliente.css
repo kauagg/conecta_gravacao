@@ -1,0 +1,29 @@
+body {
+      background-color: #f0f2f5;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    .cadastro-box {
+      max-width: 500px;
+      margin: 60px auto;
+      background: white;
+      padding: 40px 30px;
+      border-radius: 12px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.1);
+    }
+
+    .cadastro-box h2 {
+      margin-bottom: 30px;
+      text-align: center;
+      color: #0d6efd;
+    }
+
+    .btn-cadastro {
+      background-color: #0d6efd;
+      color: white;
+      font-weight: bold;
+    }
+
+    .btn-cadastro:hover {
+      background-color: #084298;
+    }

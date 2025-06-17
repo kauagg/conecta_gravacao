@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dashboard do Cliente - Conecta Festas</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #111827;
+            color: #e5e7eb;
+            margin: 0;
+            height: 100vh;
+            overflow: hidden;
+        }
+        .sidebar {
+            background-color: #1f2937;
+            width: 260px;
+            height: 100vh;
+            position: fixed;
+            transition: width 0.3s ease;
+            overflow-y: auto;
+        }
+        .sidebar.collapsed {
+            width: 80px;
+        }
+        .sidebar .logo {
+            padding: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            border-bottom: 1px solid #374151;
+        }
+        .sidebar .logo-text {
+            font-size: 1.5rem;
+            font-weight: 700;
+            transition: opacity 0.3s ease;
+        }
+        .sidebar.collapsed .logo-text {
+            opacity: 0;
+        }
+        .sidebar nav a {
+            color: #d1d5db;
+            padding: 1rem 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            text-decoration: none;
+            transition: background 0.2s ease;
+        }
+        .sidebar nav a:hover, .sidebar nav a.active {
+            background-color: #374151;
+            color: #ffffff;
+        }
+        .sidebar.collapsed nav a span {
+            display: none;
+        }
+        .content {
+            margin-left: 260px;
+            padding: 2rem;
+            min-height: 100vh;
+            transition: margin-left 0.3s ease;
+            width: calc(100% - 260px); /* Ensure content takes remaining width */
+            box-sizing: border-box;
+        }
+        .content.collapsed {
+            margin-left: 80px;
+            width: calc(100% - 80px); /* Adjust width when sidebar is collapsed */
+        }
+        .dashboard-card {
+            background-color: #1f2937;
+            border-radius: 12px;
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+            padding: 2.5rem;
+            width: 100%; /* Ensure it takes full available width */
+            max-width: 100%;
+            margin: 0 auto;
+            box-sizing: border-box;
+        }
+        .chart-container {
+            width: 100%; /* Ensure it takes full width of parent */
+            max-width: 100%;
+            height: 400px; /* Fixed height for the chart */
+            margin: 2rem auto;
+            position: relative;
+        }
+        .toggle-btn {
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+        .toggle-btn:hover {
+            transform: rotate(90deg);
+        }
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 80px;
+            }
+            .sidebar .logo-text {
+                opacity: 0;
+            }
+            .sidebar nav a span {
+                display: none;
+            }
+            .content {
+                margin-left: 80px;
+                width: calc(100% - 80px);
+            }
+            .chart-container {
+                height: 300px; /* Adjusted height for smaller screens */
+            }
+        }
+    </style>
+</head>
+<body class="flex flex-col">
+    <!-- Menu Lateral -->
+    <div class="sidebar" id="sidebar">
+        <div class="logo">
+            <img src="assets/images/2Logo.png" alt="Logo">
+        </div>
+        <nav class="mt-4">
+            <a href="cliente-dashboard.html"><i class="fas fa-tachometer-alt"></i><span>Dashboard</span></a>
+            <a href="cliente-orcamentos.html"><i class="fas fa-file-invoice-dollar"></i><span>Meus Orçamentos</span></a>
+            <a href="cliente-eventos.html"><i class="fas fa-calendar-alt"></i><span>Meus Eventos</span></a>
+            <a href="cliente-mensagens.html" class="active"><i class="fas fa-envelope"></i><span>Mensagens</span></a>
+            <a href="cliente-login.html" onclick="sair()"><i class="fas fa-sign-out-alt"></i><span>Sair</span></a>
+        </nav>
+    </div>
+
+    <!-- Área de Conteúdo -->
+    <div class="content" id="content">
+        <div class="dashboard-card">
+            <h2 class="text-3xl font-semibold mb-6">Bem-vindo, <span id="clienteEmail"></span>!</h2>
+            <p class="text-gray-400 mb-6">Visão geral dos seus eventos, orçamentos e gastos (Atualizado em 18/05/2025 14:23).</p>
+
+            <!-- Visão Geral -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <div class="bg-gray-800 p-4 rounded-lg">
+                    <h3 class="text-lg font-medium">Eventos Ativos</h3>
+                    <p class="text-2xl mt-2">5</p>
+                </div>
+                <div class="bg-gray-800 p-4 rounded-lg">
+                    <h3 class="text-lg font-medium">Orçamentos Pendentes</h3>
+                    <p class="text-2xl mt-2">3</p>
+                </div>
+                <div class="bg-gray-800 p-4 rounded-lg">
+                    <h3 class="text-lg font-medium">Gasto Total</h3>
+                    <p class="text-2xl mt-2">R$ 12.500,00</p>
+                </div>
+            </div>
+
+            <!-- Gráfico -->
+            <div class="chart-container">
+                <h3 class="text-lg font-medium mb-4 text-center">Gastos Totais</h3>
+                <canvas id="gastosChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function toggleSidebar() {
+            const sidebar = document.getElementById("sidebar");
+            const content = document.getElementById("content");
+            sidebar.classList.toggle("collapsed");
+            content.classList.toggle("collapsed");
+            // Trigger chart resize after sidebar toggle
+            setTimeout(() => {
+                if (window.gastosChart) {
+                    window.gastosChart.resize();
+                }
+            }, 300); // Match the transition duration
+        }
+
+        function sair() {
+            alert("Logout realizado!");
+        }
+
+        document.addEventListener("DOMContentLoaded", function () {
+            const ctx = document.getElementById("gastosChart").getContext("2d");
+            if (!ctx) {
+                console.error("Elemento canvas não encontrado!");
+                return;
+            }
+
+            window.gastosChart = new Chart(ctx, {
+                type: "bar",
+                data: {
+                    labels: ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"],
+                    datasets: [
+                        {
+                            label: "Eventos",
+                            data: [2000, 2500, 3000, 2800, 3500, 4000, 4200, 3800, 3600, 3400, 3900, 4100],
+                            backgroundColor: "#3b82f6",
+                            borderColor: "#2563eb",
+                            borderWidth: 1
+                        },
+                        {
+                            label: "Orçamentos",
+                            data: [1500, 1800, 2200, 2000, 2500, 3000, 3200, 2800, 2600, 2400, 2900, 3100],
+                            backgroundColor: "#f87171",
+                            borderColor: "#ef4444",
+                            borderWidth: "1"
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: { ticks: { color: "#e5e7eb" } },
+                        y: { 
+                            beginAtZero: true, 
+                            ticks: { color: "#e5e7eb" },
+                            suggestedMax: 5000
+                        }
+                    },
+                    plugins: {
+                        legend: { labels: { color: "#e5e7eb" } }
+                    }
+                }
+            });
+
+            // Handle window resize and zoom changes
+            window.addEventListener('resize', () => {
+                if (window.gastosChart) {
+                    window.gastosChart.resize();
+                }
+            });
+        });
+    </script>
+</body>
+</html>

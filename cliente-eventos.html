@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Eventos do Cliente - Dashboard</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" />
+  <link rel="stylesheet" href="assets/css/cliente-eventos.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+</head>
+<body>
+
+  <div class="sidebar" id="sidebar">
+    <div class="logo-container">
+      <img src="assets/images/2Logo.png" alt="Logo" class="logo">
+    </div>
+    <nav>
+      <a href="cliente-dashboard.php"><i class="fas fa-tachometer-alt"></i><span>Dashboard</span></a>
+      <a href="cliente-orcamentos.php"><i class="fas fa-file-invoice-dollar"></i><span>Meus Orçamentos</span></a>
+      <a href="cliente-eventos.php" class="active"><i class="fas fa-calendar-alt"></i><span>Meus Eventos</span></a>
+      <a href="cliente-mensagens.php"><i class="fas fa-envelope"></i><span>Mensagens</span></a>
+      <a href="logout.php"><i class="fas fa-sign-out-alt"></i><span>Sair</span></a>
+    </nav>
+  </div>
+
+  <div class="content" id="content">
+    <div class="page-header d-flex justify-content-between align-items-center mb-4">
+      <h1><i class="fas fa-calendar-check"></i> Seus Eventos</h1>
+      <button class="btn btn-primary" onclick="openEventModal()">
+        <i class="fas fa-plus"></i> Novo Evento
+      </button>
+    </div>
+
+    <div class="event-list" id="eventList">
+      <?php if (count($eventos) === 0): ?>
+        <p>Nenhum evento cadastrado.</p>
+      <?php else: ?>
+        <div class="list-group">
+          <?php foreach ($eventos as $evento): ?>
+            <a href="#" class="list-group-item list-group-item-action flex-column align-items-start mb-2" onclick="editarEvento(<?= $evento['id'] ?>)">
+              <div class="d-flex w-100 justify-content-between">
+                <h5 class="mb-1"><?= htmlspecialchars($evento['nome']) ?></h5>
+                <small>
+                  <?php
+                    $dataFormatada = date('d/m/Y H:i', strtotime($evento['data_hora']));
+                    echo $dataFormatada;
+                  ?>
+                </small>
+              </div>
+              <p class="mb-1"><?= nl2br(htmlspecialchars($evento['descricao'])) ?></p>
+              <small>Status: 
+                <?php
+                switch ($evento['status']) {
+                  case 'pendente': echo '<span class="badge bg-warning text-dark">Pendente</span>'; break;
+                  case 'confirmado': echo '<span class="badge bg-success">Confirmado</span>'; break;
+                  case 'cancelado': echo '<span class="badge bg-danger">Cancelado</span>'; break;
+                  default: echo '<span class="badge bg-secondary">Desconhecido</span>';
+                }
+                ?>
+              </small>
+            </a>
+          <?php endforeach; ?>
+        </div>
+      <?php endif; ?>
+    </div>
+  </div>
+
+  <!-- Modal Novo/Editar Evento -->
+  <div class="modal fade" id="eventModal" tabindex="-1" aria-labelledby="eventModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <form id="eventForm">
+          <div class="modal-header">
+            <h5 class="modal-title" id="eventModalLabel">
+              <i class="fas fa-calendar-plus"></i> Novo Evento
+            </h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+          </div>
+          <div class="modal-body">
+              <input type="hidden" id="eventId" name="eventId">
+              <div class="row">
+                <div class="col-md-8 mb-3">
+                  <label for="nomeEvento" class="form-label">
+                    <i class="fas fa-tag"></i> Nome do Evento
+                  </label>
+                  <input type="text" class="form-control" id="nomeEvento" name="nomeEvento" required maxlength="100" placeholder="Ex: Festa de Aniversário, Reunião Corporativa...">
+                </div>
+                <div class="col-md-4 mb-3">
+                  <label for="statusEvento" class="form-label">
+                    <i class="fas fa-info-circle"></i> Status
+                  </label>
+                  <select class="form-select" id="statusEvento" name="statusEvento" required>
+                    <option value="">Selecione o status</option>
+                    <option value="pendente">Pendente</option>
+                    <option value="confirmado">Confirmado</option>
+                    <option value="cancelado">Cancelado</option>
+                  </select>
+                </div>
+              </div>
+              <div class="mb-3">
+                <label for="dataEvento" class="form-label">
+                  <i class="fas fa-calendar"></i> Data e Hora do Evento
+                </label>
+                <input type="datetime-local" class="form-control" id="dataEvento" name="dataEvento" required>
+              </div>
+              <div class="mb-3">
+                <label for="descricaoEvento" class="form-label">
+                  <i class="fas fa-align-left"></i> Descrição
+                </label>
+                <textarea class="form-control" id="descricaoEvento" name="descricaoEvento" rows="4" maxlength="255" placeholder="Descreva os detalhes do seu evento..."></textarea>
+                <div class="form-text">Máximo 255 caracteres</div>
+              </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+              <i class="fas fa-times"></i> Cancelar
+            </button>
+            <button type="submit" class="btn btn-primary">
+              <i class="fas fa-save"></i> Salvar Evento
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="assets/js/cliente-eventos.js"></script>
+  <script>
+    function sair() {
+      window.location.href = 'logout.php';
+    }
+
+    function openEventModal() {
+      // Limpa o formulário para novo evento
+      document.getElementById('eventForm').reset();
+      document.getElementById('eventId').value = '';
+      const modalTitle = document.getElementById('eventModalLabel');
+      modalTitle.innerHTML = '<i class="fas fa-calendar-plus"></i> Novo Evento';
+      var eventModal = new bootstrap.Modal(document.getElementById('eventModal'));
+      eventModal.show();
+    }
+
+    function editarEvento(id) {
+      // Buscar dados do evento no PHP via AJAX ou já passar os dados via JS (dependendo da implementação)
+      // Aqui você pode fazer uma requisição fetch para carregar os dados e preencher o formulário
+      // Exemplo (pseudo código):
+      /*
+      fetch('get_evento.php?id=' + id)
+        .then(res => res.json())
+        .then(data => {
+          document.getElementById('eventId').value = data.id;
+          document.getElementById('nomeEvento').value = data.nome;
+          document.getElementById('statusEvento').value = data.status;
+          document.getElementById('dataEvento').value = data.data_hora; // ajustar formato se necessário
+          document.getElementById('descricaoEvento').value = data.descricao;
+          document.getElementById('eventModalLabel').innerHTML = '<i class="fas fa-edit"></i> Editar Evento';
+          new bootstrap.Modal(document.getElementById('eventModal')).show();
+        });
+      */
+      alert('Funcionalidade de editar evento para o ID ' + id + ' deve ser implementada via AJAX.');
+    }
+
+    // Submissão do formulário via AJAX (exemplo básico)
+    document.getElementById('eventForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      // Aqui você deve implementar o envio dos dados para salvar via AJAX e atualizar a lista
+      alert('Salvar evento via AJAX (implemente a lógica no cliente-eventos.js)');
+    });
+  </script>
+
+</body>
+</html>
